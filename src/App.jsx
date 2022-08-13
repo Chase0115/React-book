@@ -1,36 +1,62 @@
-import "./App.css";
-import TodoTemplate from "./components/todoTemplate";
-import TodoInput from "./components/todoinput";
-import TodoList from "./components/todoList";
-import { useState, useRef, useCallback } from "react";
+import './App.css';
+import TodoTemplate from './components/todoTemplate';
+import TodoInput from './components/todoinput';
+import TodoList from './components/todoList';
+import { useState, useRef, useCallback, useReducer } from 'react';
+
+function createBulkTodos() {
+  const array = [];
+  for (let i = 1; i <= 2500; i++) {
+    array.push({
+      id: i,
+      text: `Todo ${i}`,
+      checked: false,
+    });
+  }
+  return array;
+}
+
+function todoReducer(todos, action) {
+  switch(action.type) {
+    case 'INSERT':
+      return todos.concat(action.todo);
+    case 'REMOVE':
+      return todos.filter(todo => todo.id !== action.id);
+    default:
+      return todos;
+  }
+}
 
 function App() {
-  const [todos, setTodos] = useState([
-    {id: 1, text: 'react-basic', check: true},
-    {id: 2, text: 'react-inter', check: true},
-    {id: 3, text: 'react-adv', check: true}
-  ])
+  const [todos, dispatch] = useReducer(todoReducer, undefined, createBulkTodos);
 
-  const nextId = useRef(4);
+  const nextId = useRef(2501);
 
-  const onAdd = useCallback((text) => {
-    const todo = {id: nextId, text: text, check: true};
-    setTodos(todos.concat(todo));
-    nextId.current += 1;
-    }, [todos])
-  
-  const onRemove = useCallback((id) => {
-    setTodos(todos.filter(todo => todo.id !== id))
-  }, [todos])
+  const onAdd = useCallback(
+    (text) => {
+      const todo = { 
+        id: nextId.current, 
+        text, 
+        checked: false };
+      dispatch({type: 'INSERT', todo});
+      nextId.current += 1;
+    },
+    [],
+  );
 
+  const onRemove = useCallback(
+    (id) => {
+      dispatch({type: 'REMOVE', id});
+    },
+    [],
+  );
 
   return (
     <section>
       <TodoTemplate>
-        <TodoInput onAdd={onAdd}/>
+        <TodoInput onAdd={onAdd} />
         <TodoList todos={todos} onRemove={onRemove} />
       </TodoTemplate>
-      
     </section>
   );
 }
